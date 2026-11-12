@@ -1,0 +1,379 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "code-generator.input.v1",
+  "title": "Code Generator \u2014 Input Contract (v1)",
+  "description": "Input contract for the Code Generator stage. Receives unit specs, skills, and constraints; produces source code and tests per the execution plan.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "stage_id",
+    "user_request",
+    "predecessor_artifacts",
+    "unit_name",
+    "skills_required",
+    "skill_paths_resolved"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-]+$"
+    },
+    "stage_id": {
+      "const": "code-generator"
+    },
+    "user_request": {
+      "type": "string",
+      "minLength": 1
+    },
+    "predecessor_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "Includes execution-plan and (if decomposed) the unit spec"
+    },
+    "unit_name": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-]+$"
+    },
+    "unit_spec_path": {
+      "type": "string",
+      "description": "Path to unit spec YAML. Required for non-fast-path code generation."
+    },
+    "skills_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 4,
+      "default": [
+        "using-agent-skills",
+        "incremental-implementation",
+        "test-driven-development",
+        "source-driven-development"
+      ]
+    },
+    "skill_paths_resolved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Resolved SKILL.md paths. FAST_PATH sets this empty; non-FAST_PATH requires \u22651."
+    },
+    "budget": {
+      "type": "object"
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "require_human_approval"
+      ]
+    },
+    "context_pointers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "locks_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "fast_path": {
+      "type": "boolean",
+      "default": false,
+      "description": "FAST_PATH mode \u2014 skip plan gate, skip re-spawn, stripped output. When true, no plan file is written."
+    },
+    "merged_plan_generate": {
+      "type": "boolean",
+      "default": false,
+      "description": "SMALL-tier merged mode \u2014 write the plan file inline and proceed to generation in the same spawn (single approval gate at the end). The plan IS still written to disk; only the separate plan-approval gate is removed. Mutually exclusive with fast_path."
+    },
+    "shared_design_mode": {
+      "type": "string",
+      "enum": ["write", "skip"],
+      "default": "write",
+      "description": "Construction shared design policy. write = create missing run-scoped design docs (once per run). skip = shared docs already exist — Sub-stage 2 is a no-op (no re-analysis, no rewrite, no design gates). Orchestrator sets skip after factory_design_gap.py check-shared passes."
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "TINY",
+        "SMALL",
+        "MEDIUM",
+        "LARGE"
+      ],
+      "default": "SMALL"
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "FAST_PATH constraints (e.g. TDD required, no architectural decisions)"
+    },
+    "repo_root": {
+      "type": "string",
+      "default": ".",
+      "description": "FAST_PATH working directory"
+    },
+    "model_override": {
+      "type": "string",
+      "description": "Model to use for this stage. Overrides tool default. Set by orchestrator from budgets/default.yaml."
+    },
+    "design_system_path": {
+      "type": "string",
+      "description": "Path to design-system/ root. Set by project-profile when ui=true. Null when no design system exists."
+    },
+    "has_figma_data": {
+      "type": "boolean",
+      "description": "Set by project-profile when figma/ dir or *.figma.json files exist in the workspace."
+    },
+    "figma_snapped_path": {
+      "type": "string",
+      "description": "Path to figma/snapped.json after figma-snap ran. Absent when has_figma_data is false."
+    },
+    "figma_archaeologist_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set when >10 corrections made during figma snap \u2014 triggers Arque\u00f3logo fallback in code-generator."
+    },
+    "has_stitch_data": {
+      "type": "boolean",
+      "description": "Set by project-profile when stitch/ dir or *.stitch.json files exist in the workspace."
+    },
+    "stitch_snapped_path": {
+      "type": "string",
+      "description": "Path to stitch/snapped.json after stitch-snap ran. Absent when has_stitch_data is false."
+    },
+    "stitch_archaeologist_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set when >10 corrections made during stitch snap \u2014 triggers Arque\u00f3logo fallback in code-generator."
+    },
+    "token_bridge_artifacts": {
+      "type": "array",
+      "description": "Token Bridge outputs (tokens.css, tailwind.config.js, token-prompt.md). Generated by factory_token_bridge.py prepare.",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "path"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "css",
+              "tailwind",
+              "prompt"
+            ]
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "inception_plan_path": {
+      "type": "string",
+      "description": "Path to the inception execution plan markdown (aidlc-docs/inception/plans/<run-id>-execution-plan.md). Set by orchestrator so code-generator can tick off inception tasks after unit completion."
+    },
+    "inception_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Inception plan task IDs (e.g. ['ING-T4', 'ING-T5']) that belong to this unit. Code-generator marks these [x] in inception_plan_path after all tasks are done."
+    },
+    "ui_intent": {
+      "type": "array",
+      "description": "Semantic UI plan from functional design. Each entry maps a needed component to a primitive or pattern.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "component": {
+            "type": "string",
+            "description": "Name of the UI element (e.g. 'save-button', 'login-form')"
+          },
+          "primitive": {
+            "type": "string",
+            "description": "Design system primitive to use (e.g. 'Button', 'Stack')"
+          },
+          "pattern": {
+            "type": "string",
+            "description": "Pattern from design-system/patterns/ to use (e.g. 'form-layout')"
+          },
+          "props": {
+            "type": "object",
+            "description": "Initial props for the primitive"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "continuation": {
+      "type": "object",
+      "description": "In-stage resume cursor. See shared/continuation.v1.json and runtime/progress-trace.md.",
+      "required": ["mode", "progress_path"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["fresh", "resume"]
+        },
+        "progress_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resume_from": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "last_seq": { "type": "integer", "minimum": 0 },
+            "attempt": { "type": "integer", "minimum": 1 },
+            "task_id": { "type": "string" },
+            "next_action": { "type": "string" },
+            "completed_task_ids": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "skills_satisfied": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string" },
+                  "evidence": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "context_snapshot": {
+      "type": "object",
+      "description": "Condensed historical context injected by the orchestrator before each stage spawn. See shared/context-snapshot.v1.json for schema.",
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "string",
+          "enum": [
+            "minimal",
+            "standard",
+            "comprehensive"
+          ]
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "project_context": {
+          "type": "object"
+        },
+        "current_state": {
+          "type": "object"
+        },
+        "recent_decisions": {
+          "type": "array"
+        },
+        "stage_timeline": {
+          "type": "array"
+        },
+        "open_items": {
+          "type": "object"
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recent_handoffs": {
+          "type": "array"
+        },
+        "markdown": {
+          "type": "string",
+          "description": "Full markdown representation of the snapshot"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "fast_path": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "skill_paths_resolved": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "fast_path": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "user_request",
+          "fast_path"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "default": "fast-path"
+          },
+          "stage_id": {
+            "const": "code-generator"
+          },
+          "predecessor_artifacts": {
+            "default": []
+          },
+          "unit_name": {
+            "default": "_fast_path"
+          },
+          "skills_required": {
+            "default": [
+              "using-agent-skills",
+              "test-driven-development"
+            ]
+          },
+          "skill_paths_resolved": {
+            "default": []
+          }
+        }
+      }
+    }
+  ]
+}

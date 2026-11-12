@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "workflow-planner.input.v1",
+  "title": "Workflow Planner \u2014 Input Contract (v1)",
+  "description": "Input contract for the Workflow Planner stage. Receives requirements and produces the execution plan with Mermaid visualization, units, tasks, and acceptance criteria.",
+  "type": "object",
+  "required": [
+    "run_id",
+    "stage_id",
+    "user_request",
+    "predecessor_artifacts",
+    "skills_required",
+    "skill_paths_resolved"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9-]+$"
+    },
+    "stage_id": {
+      "const": "workflow-planner"
+    },
+    "user_request": {
+      "type": "string",
+      "minLength": 1
+    },
+    "predecessor_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "Must include requirements.md path"
+    },
+    "skills_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "default": [
+        "using-agent-skills",
+        "planning-and-task-breakdown"
+      ]
+    },
+    "skill_paths_resolved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "budget": {
+      "type": "object"
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "require_human_approval"
+      ]
+    },
+    "context_pointers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "locks_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "depth_override": {
+      "type": "string",
+      "enum": [
+        "minimal",
+        "standard",
+        "comprehensive"
+      ],
+      "description": "Set by Cost Governor when budget is below threshold. Agent must honor this over its own depth selection."
+    },
+    "model_override": {
+      "type": "string",
+      "description": "Model to use for this stage. Overrides tool default. Set by orchestrator from budgets/default.yaml."
+    },
+    "continuation": {
+      "type": "object",
+      "description": "In-stage resume cursor. See shared/continuation.v1.json and runtime/progress-trace.md.",
+      "required": ["mode", "progress_path"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["fresh", "resume"]
+        },
+        "progress_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resume_from": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "last_seq": { "type": "integer", "minimum": 0 },
+            "attempt": { "type": "integer", "minimum": 1 },
+            "task_id": { "type": "string" },
+            "next_action": { "type": "string" },
+            "completed_task_ids": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "skills_satisfied": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string" },
+                  "evidence": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "context_snapshot": {
+      "type": "object",
+      "description": "Condensed historical context injected by the orchestrator before each stage spawn. See shared/context-snapshot.v1.json for schema.",
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "string",
+          "enum": [
+            "minimal",
+            "standard",
+            "comprehensive"
+          ]
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "project_context": {
+          "type": "object"
+        },
+        "current_state": {
+          "type": "object"
+        },
+        "recent_decisions": {
+          "type": "array"
+        },
+        "stage_timeline": {
+          "type": "array"
+        },
+        "open_items": {
+          "type": "object"
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recent_handoffs": {
+          "type": "array"
+        },
+        "markdown": {
+          "type": "string",
+          "description": "Full markdown representation of the snapshot"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "code-generator.output.v1",
+  "title": "Code Generator — Output Contract (v1)",
+  "description": "Output contract for the Code Generator stage. Reports generated artifacts, test results, fast-path mode, design system compliance, and open questions.",
+  "type": "object",
+  "required": ["status", "unit_name", "sub_stage", "artifacts", "audit_entries", "skill_compliance"],
+  "allOf": [
+    {
+      "if": { "properties": { "fast_path": { "const": true } } },
+      "then": { "properties": { "skill_compliance": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "fast_path": { "const": false } } },
+      "then": { "properties": { "skill_compliance": { "minItems": 1 } } }
+    }
+  ],
+  "properties": {
+    "status": { "type": "string", "enum": ["complete", "blocked", "failed", "needs_human"] },
+    "unit_name": { "type": "string", "pattern": "^[a-zA-Z0-9-]+$" },
+    "sub_stage": { "type": "string", "enum": ["plan", "design/func", "design/nfr-req", "design/nfr-design", "design/infra", "generated", "approved"] },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "kind"],
+        "properties": {
+          "path": { "type": "string" },
+          "kind": { "type": "string", "enum": ["source", "test", "plan", "doc", "config"] },
+          "hash": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "audit_entries": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "skill_compliance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["skill", "status", "evidence"],
+        "properties": {
+          "skill": { "type": "string" },
+          "status": { "type": "string", "enum": ["PASS", "FAIL", "N/A"] },
+          "evidence": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "fast_path": { "type": "boolean", "description": "True when running in FAST_PATH mode (TINY complexity tier), which loads fewer skills" },
+    "cost": { "type": "object" },
+    "tests_added": { "type": "integer", "minimum": 0 },
+    "tests_passing": { "type": "integer", "minimum": 0 },
+    "commits_made": { "type": "integer", "minimum": 0 },
+    "emitted_knowledge": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "title", "body"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["pattern", "adr", "antipattern", "lesson", "drift_baseline_updated"] },
+          "title": { "type": "string", "minLength": 1 },
+          "body": { "type": "string", "minLength": 1 },
+          "tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+          "related_artifacts": { "type": "array", "items": { "type": "string" }, "default": [] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.8 }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "conflicts_detected": { "type": "array", "default": [] },
+    "locks_to_release": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "ui_compliance": {
+      "type": "array",
+      "description": "Design system compliance report per UI element. Populated when design_system_path is set.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "element": { "type": "string", "description": "Element identifier (e.g. 'button.save-btn')" },
+          "primitive_used": { "type": "string", "description": "Name of the primitive used" },
+          "token_compliance": { "type": "boolean", "description": "Whether all tokens were correctly used" },
+          "deviations_corrected": {
+            "type": "array",
+            "description": "List of values autocorrected by ui-constraint-validator",
+            "items": {
+              "type": "object",
+              "properties": {
+                "property": { "type": "string" },
+                "element": { "type": "string" },
+                "found": { "type": "string" },
+                "corrected_to": { "type": "string" },
+                "file": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
+            "default": []
+          },
+          "screenshot_path": { "type": "string", "description": "Path to captured screenshot (if available)" },
+          "direction_followed": { "type": "boolean", "description": "Whether the screen follows design-direction.md" },
+          "craft_pass": { "type": "string", "description": "unslop pass evidence for this element or screen" },
+          "detector": { "type": "string", "description": "impeccable detector result: clean, findings, or missing" }
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "run_id": { "type": "string", "description": "Orchestrator run ID injected by the agent" },
+    "stage_id": { "const": "code-generator" },
+    "files_written": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Files written by the code generator during this unit",
+      "default": []
+    },
+    "design_reuse": {
+      "type": "array",
+      "description": "How this unit treated run-scoped shared construction design docs (write-once / reuse / delta).",
+      "items": {
+        "type": "object",
+        "required": ["path", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["REUSED", "WRITTEN", "DELTA"]
+          },
+          "evidence": { "type": "string" }
+        }
+      },
+      "default": []
+    },
+    "plan_artifact_path": { "type": "string", "description": "Path to the plan artifact for this unit" },
+    "acceptance_criteria_met": { "type": "boolean", "description": "Whether all acceptance criteria from the plan were satisfied" },
+    "commit_sha": { "type": "string", "description": "Git commit SHA of the code generation batch (if committed)" },
+    "open_questions": {
+      "type": "array",
+      "description": "Open questions or blockers that need human resolution before the next unit",
+      "items": { "type": "string", "minLength": 1 },
+      "default": []
+    }
+  },
+  "additionalProperties": false
+}

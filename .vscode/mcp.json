@@ -1,0 +1,35 @@
+{
+  "servers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "chrome-devtools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "engram": {
+      "type": "stdio",
+      "command": "engram",
+      "args": [
+        "mcp"
+      ]
+    },
+    "ai-architecture-cookbook": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ai-architecture-cookbook/mcp-server"
+      ],
+      "type": "stdio"
+    }
+  }
+}

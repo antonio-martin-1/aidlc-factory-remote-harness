@@ -1,0 +1,51 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {},
+      "tools": [
+        "*"
+      ]
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ],
+      "env": {},
+      "tools": [
+        "*"
+      ]
+    },
+    "engram": {
+      "command": "engram",
+      "args": [
+        "mcp"
+      ],
+      "type": "local",
+      "env": {},
+      "tools": [
+        "*"
+      ]
+    },
+    "ai-architecture-cookbook": {
+      "type": "local",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ai-architecture-cookbook/mcp-server"
+      ],
+      "env": {},
+      "tools": [
+        "*"
+      ]
+    }
+  }
+}

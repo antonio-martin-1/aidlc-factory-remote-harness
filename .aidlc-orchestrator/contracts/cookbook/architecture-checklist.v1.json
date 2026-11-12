@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aidlc-factory/contracts/cookbook/architecture-checklist.v1.json",
+  "title": "Architecture Checklist",
+  "description": "Output of the Cookbook get_checklist MCP tool. Validated structurally before reviewer agents consume it.",
+  "type": "object",
+  "required": ["domain", "items"],
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Standard domain identifier (e.g. 'authentication', 'encryption')"
+    },
+    "severity_filter": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "description": "Severity level used to filter results (if empty, all items returned)"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "severity"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique checklist item identifier"
+          },
+          "description": {
+            "type": "string",
+            "description": "Verification step description"
+          },
+          "category": {
+            "type": "string",
+            "description": "Checklist category (e.g. 'security', 'performance', 'reliability')"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"],
+            "description": "Severity of the check"
+          },
+          "verified_by": {
+            "type": "string",
+            "description": "Pattern or anti-pattern ID that verifies this check"
+          }
+        }
+      }
+    },
+    "total_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total number of checklist items before any filter"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "approval.output.v1",
+  "title": "Structured Approval Gate — Output Contract (v1)",
+  "description": "User decision captured at an approval gate. Emitted by the orchestrator after the user responds. Stored in the manifest and audit trail.",
+  "type": "object",
+  "required": ["run_id", "stage", "status", "decision", "timestamp"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["complete", "needs_human", "failed", "blocked"],
+      "description": "Runtime status of this approval"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Literal run-id"
+    },
+    "stage": {
+      "type": "string",
+      "description": "Stage that requested approval"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["approve", "request_changes", "cancel", "skip"],
+      "description": "User's explicit decision"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the decision was recorded"
+    },
+    "user_note": {
+      "type": "string",
+      "description": "Optional free-text note from the user explaining the decision or requested changes"
+    },
+    "requested_changes": {
+      "type": "array",
+      "description": "List of specific changes requested when decision is 'request_changes'",
+      "items": {
+        "type": "object",
+        "required": ["unit", "description"],
+        "properties": {
+          "unit": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "commit_triggered": {
+      "type": "boolean",
+      "description": "Whether a git commit was triggered after this approval (only true for approve decisions at command boundary)"
+    },
+    "commit_sha": {
+      "type": "string",
+      "description": "Git commit SHA if commit_triggered is true"
+    },
+    "audit_entries": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Audit bullets generated from this decision"
+    }
+  },
+  "additionalProperties": false
+}

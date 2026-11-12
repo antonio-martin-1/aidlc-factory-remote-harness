@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "approval.input.v1",
+  "title": "Structured Approval Gate — Input Contract (v1)",
+  "description": "Standardized approval prompt presented to the user when a stage returns needs_human or at command boundary. Replaces free-form text with structured, validated output. Ensures consistent format and next-command visibility across all /factory-* commands.",
+  "type": "object",
+  "required": ["stage", "run_id", "title", "units", "artifacts", "resolution", "next_command"],
+  "properties": {
+    "stage": {
+      "type": "string",
+      "description": "Stage requesting approval (e.g. code-generator, requirements-analyst, workflow-planner, ship-agent)"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Literal run-id (e.g. 2026-05-23T13-10-58Z-dragon-ball-z-app). NEVER use placeholder <run-id>."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short human-readable title (e.g. 'Code Generation — Plan Approval', 'Requirements Analysis — Final Approval')"
+    },
+    "units": {
+      "type": "array",
+      "description": "One or more units/artifacts submitted for approval",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["label", "tasks"],
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Unit name (e.g. server-scaffold) or artifact category (e.g. 'Requirements Document')"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "description"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Short task ID (e.g. T1, AC-1.5)"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "What this task does"
+                },
+                "covers": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "ACs this task covers (e.g. ['AC-1.5', 'AC-NFR-3.2'])"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["complete", "pending", "blocked", "skipped"],
+                  "description": "Current status of this task. Use 'skipped' when the stage was intentionally not run (e.g. ComplexityGov skip_stages, or a conditional skip such as a single-unit plan)."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "estimated_tokens": { "type": "integer", "minimum": 0 },
+          "estimated_minutes": { "type": "number", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "Artifacts produced by the stage that the user must review before approving",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "kind"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "File path relative to repo root (e.g. aidlc-docs/inception/requirements/2026-05-23T13-10-58Z-dragon-ball-z-app-requirements.md)"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["doc", "source", "test", "config", "plan", "report", "questions", "changelog", "adr"],
+            "description": "Artifact category"
+          },
+          "description": {
+            "type": "string",
+            "description": "One-line description of what this artifact contains"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "skill_compliance": {
+      "type": "array",
+      "description": "Skill compliance table rows to display during approval",
+      "items": {
+        "type": "object",
+        "required": ["skill", "status"],
+        "properties": {
+          "skill": { "type": "string" },
+          "status": { "type": "string", "enum": ["PASS", "FAIL", "N/A", "MISSING"] },
+          "evidence": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "required": ["options"],
+      "properties": {
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": ["approve", "request_changes", "cancel", "skip"]
+          }
+        },
+        "note_prompt": {
+          "type": "string",
+          "description": "Prompt for user note text field (e.g. 'Describe what changes are needed')"
+        }
+      },
+      "additionalProperties": false
+    },
+    "next_command": {
+      "type": "object",
+      "required": ["command", "description"],
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Exact next command to run with literal run_id substituted (e.g. '/factory-plan 2026-05-23T13-10-58Z-dragon-ball-z-app')"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this next command does (e.g. 'Generate execution plan and unit decomposition')"
+        }
+      },
+      "additionalProperties": false
+    },
+    "context": {
+      "type": "string",
+      "description": "Optional markdown context from the stage output (key findings, risks, pre-mortem results, etc.)"
+    },
+    "routing_decisions": {
+      "type": "object",
+      "description": "Optional routing decisions from complexity analysis (for inception-stage approvals)",
+      "properties": {
+        "skip_stages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "reviewer_pool": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "merge_codegen_gate": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

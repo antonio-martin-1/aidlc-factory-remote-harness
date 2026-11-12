@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aidlc-factory/contracts/cookbook/architecture-recommendation.v1.json",
+  "title": "Architecture Recommendation (v2 — Enhanced)",
+  "description": "Output of the Cookbook recommend_pattern MCP tool. Extended with scoring, explainability, tech stack, and cross-domain fields.",
+  "type": "object",
+  "required": ["recommendations"],
+  "properties": {
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["domain", "pattern", "pattern_name", "confidence", "matched_node", "rationale"],
+        "properties": {
+          "domain": { "type": "string" },
+          "pattern": { "type": "string" },
+          "pattern_name": { "type": "string" },
+          "confidence": {
+            "type": "string",
+            "description": "Dynamic confidence adjusted by coverage_ratio and input completeness"
+          },
+          "matched_node": { "type": "string" },
+          "rationale": { "type": "string" },
+          "one_line_rationale": { "type": "string" },
+          "tradeoffs": {
+            "type": "object",
+            "properties": {
+              "pros": { "type": "array", "items": { "type": "string" } },
+              "cons": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "mvp": { "type": "string", "enum": ["MVP", "defer", "unknown"] },
+          "implementation_guidelines": {
+            "type": "array", "items": { "type": "string" }
+          },
+          "checklist_summary": {
+            "type": "object",
+            "required": ["critical", "high", "total"],
+            "properties": {
+              "critical": { "type": "integer", "minimum": 0 },
+              "high": { "type": "integer", "minimum": 0 },
+              "total": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "coverage_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Fraction of decision tree conditions that could be evaluated given available context"
+          },
+          "inputs_provided": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of context_inputs explicitly provided by caller"
+          },
+          "inputs_total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of context_inputs defined in the standard"
+          },
+          "inputs_missing": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Required inputs without default that were not provided"
+          },
+          "inputs_used_defaults": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Inputs that fell back to their default values"
+          },
+          "alternatives_considered": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["pattern", "pattern_name", "node_id", "score", "why_not_selected"],
+              "properties": {
+                "pattern": { "type": "string" },
+                "pattern_name": { "type": "string" },
+                "node_id": { "type": "string" },
+                "score": { "type": "number", "minimum": 0, "maximum": 1 },
+                "coverage_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+                "why_not_selected": { "type": "string" },
+                "tradeoffs": {
+                  "type": "object",
+                  "properties": {
+                    "pros": { "type": "array", "items": { "type": "string" } },
+                    "cons": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "decision_rationale": {
+            "type": "string",
+            "description": "Compact explanation of the decision in ≤280 chars"
+          },
+          "tech_stack_match": {
+            "type": "object",
+            "properties": {
+              "matched": { "type": "boolean" },
+              "tech_name": { "type": "string" },
+              "implementation_ref": { "type": "string" }
+            },
+            "description": "Whether the recommended pattern matches the project's tech stack"
+          }
+        }
+      }
+    },
+    "unmatched_domains": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "fallbacks_used": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "decision_traces": {
+      "type": "object",
+      "description": "Decision tree trace details (present when include_trace is true)",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "matched_node": { "type": "string" },
+          "node": { "type": "object" }
+        }
+      }
+    },
+    "cross_domain": {
+      "type": "object",
+      "description": "Cross-domain consistency analysis (present when workflow mode=audit or domains.length > 1)",
+      "properties": {
+        "domain_order": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "domain": { "type": "string" },
+              "depth": { "type": "integer" },
+              "depends_on": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "domain_a": { "type": "string" },
+              "domain_b": { "type": "string" },
+              "pattern_a": { "type": "string" },
+              "pattern_b": { "type": "string" },
+              "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+              "description": { "type": "string" },
+              "resolution": { "type": "string" }
+            }
+          }
+        },
+        "evaluation_order": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "consistency_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "tool_invocation_snippet": {
+      "type": "object",
+      "description": "Tool invocation snippet for reuse"
+    }
+  }
+}

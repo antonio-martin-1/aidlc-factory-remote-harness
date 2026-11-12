@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "shared.continuation.v1",
+  "title": "Shared — In-stage continuation cursor (v1)",
+  "description": "Optional input block. The orchestrator attaches it on every spawn from the progress YAML so a new subagent resumes the open stage instead of starting over. See runtime/progress-trace.md.",
+  "type": "object",
+  "required": ["mode", "progress_path"],
+  "additionalProperties": false,
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["fresh", "resume"]
+    },
+    "progress_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resume_from": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "last_seq": { "type": "integer", "minimum": 0 },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "task_id": { "type": "string" },
+        "next_action": { "type": "string" },
+        "completed_task_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "skills_satisfied": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "evidence": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
